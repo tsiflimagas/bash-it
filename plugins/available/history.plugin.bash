@@ -16,6 +16,8 @@ shopt -s histappend
 function top-history() {
 	about 'print the name and count of the most commonly run tools'
 
+	[[ "$1" =~ [[:digit:]] ]] && local -i range="${1#-}"
+
 	# - Make sure formatting doesn't interfer with our parsing
 	# - Use awk to count how many times the first command on each line has been called
 	# - Truncate to 10 lines
@@ -28,7 +30,7 @@ function top-history() {
 				printf("%s\t%s\n", a[i], i)
 			}' \
 		| sort --reverse --numeric-sort \
-		| head \
+		| head -n "${range:-10}" \
 		| column \
 			--table \
 			--table-columns 'Command Count,Command Name' \
