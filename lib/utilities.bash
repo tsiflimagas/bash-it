@@ -139,25 +139,52 @@ function _bash-it-clean-component-cache() {
 
 # Returns an array of items within each compoenent.
 function _bash-it-component-list() {
-	local IFS=$'\n' component="$1"
-	_bash-it-component-help "${component}" | awk '{print $1}' | sort -u
+	local all component_dir
+
+    _bash-it-component-pluralize "$1" pluralized_component
+    component_dir="${pluralized_component/completions/completion}"
+    all=("$BASH_IT/$component_dir/available/"*.bash); all=("${all[@]##*/}"); all=("${all[@]%.*.bash}")
+    builtin printf '%s\n' "${all[@]}"
 }
 
 function _bash-it-component-list-matching() {
 	local component="$1"
 	shift
 	local term="$1"
-	_bash-it-component-help "${component}" | _bash-it-egrep -- "${term}" | awk '{print $1}' | sort -u
+	_bash-it-component-list "${component}" | _bash-it-egrep -- "${term}"
 }
 
 function _bash-it-component-list-enabled() {
-	local IFS=$'\n' component="$1"
-	_bash-it-component-help "${component}" | _bash-it-egrep '\[x\]' | awk '{print $1}' | sort -u
+	local component="${1/alias/aliases}" enabled
+
+    _bash-it-component-pluralize "$1" pluralized_component
+    component_dir="${pluralized_component/completions/completion}"
+    [[ -d "$BASH_IT/$component_dir/enabled" ]] &&
+    enabled=($(compgen -G "$BASH_IT/$component_dir/enabled/*.$component.bash")) ||
+    enabled=($(compgen -G "$BASH_IT/enabled/*.$component.bash"))
+    enabled=("${enabled[@]##*---}"); enabled=("${enabled[@]##*/}"); enabled=("${enabled[@]%.*.bash}")
+
+    builtin printf '%s\n' "${enabled[@]}"
 }
 
 function _bash-it-component-list-disabled() {
-	local IFS=$'\n' component="$1"
-	_bash-it-component-help "${component}" | _bash-it-egrep -v '\[x\]' | awk '{print $1}' | sort -u
+	local all component disabled enabled i
+
+    _bash-it-component-pluralize "$1" pluralized_component
+    component="${pluralized_component/completions/completion}"
+    disabled=($(compgen -G "$BASH_IT/$component/available/*.bash")); disabled=("${disabled[@]##*/}"); disabled=("${disabled[@]%.*.bash}")
+    #[[ -d "$BASH_IT/$component/enabled" ]] &&
+    #enabled=($(compgen -G "$BASH_IT/$component/enabled/*.bash")) ||
+    #enabled=($(compgen -G "$BASH_IT/enabled/*.bash"))
+    #enabled=("${enabled[@]##*/}"); enabled=("${enabled[@]##*---}")
+    enabled=($(_bash-it-component-list-enabled "$1"))
+
+    for i in "${enabled[@]}"; do
+        disabled=("${disabled[@]//"$i"}")
+    done
+
+    #disabled=("${all[@]%.*.bash}")
+    builtin printf '%s\n' "${disabled[@]}"
 }
 
 # Checks if a given item is enabled for a particular component/file-type.

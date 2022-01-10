@@ -67,7 +67,7 @@ function _bash-it() {
 			fi
 			case "${file_type}" in
 				alias | completion | plugin)
-					candidates=('all' "$("_bash-it-component-list-${suffix}" "${file_type}")")
+					candidates=('all' "$("_bash-it-component-list-${suffix}" "${file_type}" | sort -d)")
 					_compreply_candidates
 					;;
 				*)
