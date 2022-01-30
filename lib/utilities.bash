@@ -173,17 +173,12 @@ function _bash-it-component-list-disabled() {
     _bash-it-component-pluralize "$1" pluralized_component
     component="${pluralized_component/completions/completion}"
     disabled=($(compgen -G "$BASH_IT/$component/available/*.bash")); disabled=("${disabled[@]##*/}"); disabled=("${disabled[@]%.*.bash}")
-    #[[ -d "$BASH_IT/$component/enabled" ]] &&
-    #enabled=($(compgen -G "$BASH_IT/$component/enabled/*.bash")) ||
-    #enabled=($(compgen -G "$BASH_IT/enabled/*.bash"))
-    #enabled=("${enabled[@]##*/}"); enabled=("${enabled[@]##*---}")
     enabled=($(_bash-it-component-list-enabled "$1"))
 
     for i in "${enabled[@]}"; do
         disabled=("${disabled[@]//"$i"}")
     done
 
-    #disabled=("${all[@]%.*.bash}")
     builtin printf '%s\n' "${disabled[@]}"
 }
 
