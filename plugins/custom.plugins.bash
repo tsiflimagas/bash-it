@@ -72,7 +72,7 @@ LESSEDIT="$EDITOR"
 
 function conflicts (
 
-shopt -s xpg_echo
+shopt -s nullglob xpg_echo
 
 local git_dir="$(git rev-parse --git-dir 2>/dev/null)"
 
@@ -89,7 +89,7 @@ if [[ -n "$conflicting_file" ]]
   if ! git diff --check|\grep -Fwq "$conflicting_file"
     then git add "$conflicting_file"
   fi
-elif ! \ls "$git_dir"|\grep -Eq '(REBASE|MERGE|CHERRY_PICK|REVERT).*_HEAD|rebase-(apply|merge)'
+elif [[ ! $(cd "$git_dir"; echo *) =~ (REBASE|MERGE|CHERRY_PICK|REVERT).*_HEAD|rebase-(apply|merge) ]]
   then echo "\nNo action in progress.\n" >&2
 else echo "\nNo other conflicts!\n"
   read -p "Would you like to continue? [Y/n] "
