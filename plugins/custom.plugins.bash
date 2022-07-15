@@ -89,7 +89,7 @@ if [[ -n "$conflicting_file" ]]
   if ! git diff --check|\grep -Fwq "$conflicting_file"
     then git add "$conflicting_file"
   fi
-elif [[ ! $(cd "$git_dir"; echo *) =~ (REBASE|MERGE|CHERRY_PICK|REVERT).*_HEAD|rebase-(apply|merge) ]]
+elif [[ ! $(cd "$git_dir"; printf '%s\n' *) =~ ^(REBASE|MERGE|CHERRY_PICK|REVERT).*_HEAD|rebase-(apply|merge)$ ]]
   then echo "\nNo action in progress.\n" >&2
 else echo "\nNo other conflicts!\n"
   read -p "Would you like to continue? [Y/n] "
