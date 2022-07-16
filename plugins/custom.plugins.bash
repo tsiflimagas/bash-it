@@ -33,7 +33,7 @@ function _hist_exit {
 }
 
 # trap _hist_exit EXIT
-# PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
+PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 
 _dedup_hist() {
     local -i RELOAD=0
