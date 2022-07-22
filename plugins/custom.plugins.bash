@@ -33,7 +33,7 @@ function _hist_exit {
 }
 
 # trap _hist_exit EXIT
-PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
+#PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 
 _dedup_hist() {
     local -i RELOAD=0
@@ -41,8 +41,11 @@ _dedup_hist() {
     # print only one line of history to make the test faster
     [[ -n "$(history 1)" ]] && ((RELOAD++))
 
-    history -a
-    history -c
+    if ((RELOAD)); then
+      history -n
+      history -w
+      history -c
+    fi
 
     if hash sponge 2>/dev/null; then
         tac "${HISTFILE:?}"|awk '!a[$0]++'|tac|sponge "$HISTFILE"
