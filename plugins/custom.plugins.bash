@@ -38,15 +38,10 @@ function _hist_exit {
 _dedup_hist() {
     local -i RELOAD=0
     local awkprg='
-    {gsub(/[ \t]+$/,"") # trim trailing whitespace
-    if (seen[$0]++) # opposite of !seen[$0]++;
-        # since duplicates are expected to be a small portion,
-        # the associative array will be smaller in memory
-        {getline; while ($0~/^#[[:digit:]]+$/) next} # skipping the next one after the duplicate,
-        # since it is its timestamp, and should be removed too
-        # use while instead of if, in case there were amy leftover timestamps
-    else
-        {print}}'
+    {gsub(/[ \t]+$/,"")
+    a[NR]=$0}END{for (i=NR;i>0;i--)
+    {if (b[a[i]]++) {delete a[i]}} 
+    for (j in a) {print a[j]}}'
 
     # print only one line of history to make the test faster
     [[ -n "$(history 1)" ]] && ((RELOAD++))
@@ -58,9 +53,9 @@ _dedup_hist() {
     }
 
     if hash sponge 2>/dev/null; then
-        tac "${HISTFILE:?}"|awk "$awkprg"|tac|sponge "$HISTFILE"
+        awk "$awkprg" "${HISTFILE:?}" | sponge "$HISTFILE"
     else
-        tac "${HISTFILE:?}"|awk "$awkprg"|tac > ~/".hist.tmp.$$" &&
+        awk "$awkprg" "${HISTFILE:?}" > ~/".hist.tmp.$$" &&
         mv ~/".hist.tmp.$$" "$HISTFILE"
     fi
 
