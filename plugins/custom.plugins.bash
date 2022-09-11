@@ -37,20 +37,30 @@ function _hist_exit {
 
 _dedup_hist() {
     local -i RELOAD=0
+    local awkprg='
+    {gsub(/[ \t]+$/,"") # trim trailing whitespace
+    if (seen[$0]++) # opposite of !seen[$0]++;
+        # since duplicates are expected to be a small portion,
+        # the associative array will be smaller in memory
+        {getline; while ($0~/^#[[:digit:]]+$/) next} # skipping the next one after the duplicate,
+        # since it is its timestamp, and should be removed too
+        # use while instead of if, in case there were amy leftover timestamps
+    else
+        {print}}'
 
     # print only one line of history to make the test faster
     [[ -n "$(history 1)" ]] && ((RELOAD++))
 
-    if ((RELOAD)); then
+    ((RELOAD)) && {
       history -n
       history -w
       history -c
-    fi
+    }
 
     if hash sponge 2>/dev/null; then
-        tac "${HISTFILE:?}"|awk '!a[$0]++'|tac|sponge "$HISTFILE"
+        tac "${HISTFILE:?}"|awk "$awkprg"|tac|sponge "$HISTFILE"
     else
-        tac "${HISTFILE:?}"|awk '!a[$0]++'|tac > ~/".hist.tmp.$$" &&
+        tac "${HISTFILE:?}"|awk "$awkprg"|tac > ~/".hist.tmp.$$" &&
         mv ~/".hist.tmp.$$" "$HISTFILE"
     fi
 
@@ -63,7 +73,7 @@ _dedup_hist() {
     # if it didn't go against the initial goal of making sure not having duplicates in history.
     # Duplicates would still be cleared when starting a new shell, but while using,
     # buffer would be holding the same history twice.
-    (( RELOAD )) && history -r
+    ((RELOAD)) && history -r
 }
 
 _dedup_hist
