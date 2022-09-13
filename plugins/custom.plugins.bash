@@ -40,8 +40,13 @@ _dedup_hist() {
     local awkprg='
     {gsub(/[ \t]+$/,"")
     a[NR]=$0}END{for (i=NR;i>0;i--)
-    {if (b[a[i]]++) {delete a[i]}} 
-    for (j in a) {print a[j]}}'
+    {if (b[a[i]]++) delete a[i]} 
+    # awesome solution for inplace edit using redirection, taken from here
+    # https://stackoverflow.com/a/32129754
+    # since we are reading the whole file in memory already,
+    # it will not make a difference in this regard
+    # (and bash history should be a small file anyway)
+    for (j in a) print a[j] > ARGV[1]}'
 
     # print only one line of history to make the test faster
     [[ -n "$(history 1)" ]] && ((RELOAD++))
@@ -52,12 +57,7 @@ _dedup_hist() {
       history -c
     }
 
-    if hash sponge 2>/dev/null; then
-        awk "$awkprg" "${HISTFILE:?}" | sponge "$HISTFILE"
-    else
-        awk "$awkprg" "${HISTFILE:?}" > ~/".hist.tmp.$$" &&
-        mv ~/".hist.tmp.$$" "$HISTFILE"
-    fi
+    awk "$awkprg" "${HISTFILE:?}"
 
     # when running `bashit {reload,restart}, there will be no history in the buffer,
     # because `history -c` is ran above.
